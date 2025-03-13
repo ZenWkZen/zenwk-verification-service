@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -67,8 +66,8 @@ public class VerificationService extends ApiRestSecurityHelper {
 	 * @param userDetails
 	 * @return
 	 */
-	public void sendToken(@Validated TokenDTO dto, HttpServletRequest request, UserDetails userDetails) {
-		String username = userDetails == null ? dto.getEmail() : userDetails.getUsername();
+	public void sendToken(@Validated TokenDTO dto, HttpServletRequest request) {
+		String username =dto.getEmail();
 		LogSecurity logSecurity = initializeLog(request, username, getJson(dto), notBody,
 				SecurityActionEnum.VERIFICATION_SEND_TOKEN.getCode());
 		String email = dto.getEmail();
@@ -133,8 +132,8 @@ public class VerificationService extends ApiRestSecurityHelper {
 	 * @param userDetails
 	 * @return
 	 */
-	public boolean verifyToken(String code, TokenDTO dto, HttpServletRequest request, UserDetails userDetails) {
-		String username = userDetails == null ? dto.getEmail() : userDetails.getUsername();
+	public boolean verifyToken(String code, TokenDTO dto, HttpServletRequest request) {
+		String username = dto.getEmail();
 		LogSecurity logSecurity = initializeLog(request, username, getJson(dto), notBody,
 				SecurityActionEnum.VERIFICATION_VALIDATE_TOKEN.getCode());
 		try {

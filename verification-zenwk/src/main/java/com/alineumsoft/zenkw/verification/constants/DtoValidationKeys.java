@@ -17,5 +17,7 @@ public final class DtoValidationKeys {
 	public static final String USER_EMAIL_MAX_LENGTH = "validation.user.email.maxlength";
 	public static final String USER_EMAIL_INVALID = "validation.user.email.invalid";
 	public static final String USER_EMAIL_NOT_NULL = "validation.user.email.notnull";
+	public static final String PERSON_DATE_INVALID = "validation.person.date.invalidformat";
+
 
 }

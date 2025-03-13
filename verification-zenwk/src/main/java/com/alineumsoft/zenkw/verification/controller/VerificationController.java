@@ -1,8 +1,6 @@
 package com.alineumsoft.zenkw.verification.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,10 +50,9 @@ public class VerificationController {
 	 * @return
 	 */
 	@PostMapping("/send")
-	public ResponseEntity<Void> sendToken(HttpServletRequest request, @Validated @RequestBody TokenDTO dto,
-			@AuthenticationPrincipal UserDetails userDetails) {
+	public ResponseEntity<Void> sendToken(HttpServletRequest request, @Validated @RequestBody TokenDTO dto) {
 		// Enviar solicitud de correo a la cola de RabbitMQ
-		verificationService.sendToken(dto, request, userDetails);
+		verificationService.sendToken(dto, request);
 		return ResponseEntity.noContent().build();
 	}
 
@@ -74,7 +71,7 @@ public class VerificationController {
 	 */
 	@PostMapping("/validate/{code}")
 	public ResponseEntity<Boolean> verifyToken(HttpServletRequest request, @PathVariable String code,
-			@Validated @RequestBody TokenDTO dto, @AuthenticationPrincipal UserDetails userDetails) {
-		return ResponseEntity.ok(verificationService.verifyToken(code, dto, request, userDetails));
+			@Validated @RequestBody TokenDTO dto) {
+		return ResponseEntity.ok(verificationService.verifyToken(code, dto, request));
 	}
 }

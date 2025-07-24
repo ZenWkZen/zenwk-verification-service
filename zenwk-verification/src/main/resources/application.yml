@@ -6,7 +6,7 @@ server:
     key-store: ${KEY_STORE:classpath:http://localhost:6600/keystore/dev/zenwk_dev.keystore}
     key-store-password: ${SSL_KEY_STORE_PASSWORD:123456}
     key-password: ${SSL_KEY_PASSWORD:123456}
-    key-alias: ${SSL_SERVER_ALIAS:zenwk_dev}
+    key-alias: ${SSL_SERVER_ALIAS:zenwk-local}
 
 spring:
   application:

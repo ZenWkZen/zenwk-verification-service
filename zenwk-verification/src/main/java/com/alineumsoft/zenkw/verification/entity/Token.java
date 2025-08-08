@@ -1,6 +1,7 @@
 package com.alineumsoft.zenkw.verification.entity;
 
 import java.time.LocalDateTime;
+import com.alineumsoft.zenkw.verification.dto.TokenDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -62,22 +63,25 @@ public class Token {
   @Column(name = "sectokcreationdate")
   private LocalDateTime creationDate;
 
+
   /**
+   * 
    * <p>
-   * <b> CU003_Gestionar token de verificación. </b> Constructor.
+   * <b> CU003_Gestionar token de verificación.</b> Constructor.
    * </p>
    * 
    * @author <a href="mailto:alineumsoft@gmail.com">C. Alegria</a>
-   * @param code
-   * @param email
+   * @param dto
    * @param username
-   * @param uuid
    */
-  public Token(String code, String email, String username, String uuid) {
-    this.code = code;
-    this.email = email;
+  public Token(TokenDTO dto, String username) {
+    this.email = dto.getEmail();
+    this.code = dto.getHashCode();
+    this.uuid = dto.getHashUuid();
+    this.expirationDate = dto.getExpirationDate();
+
     this.createUser = username;
     this.creationDate = LocalDateTime.now();
-    this.uuid = uuid;
+
   }
 }

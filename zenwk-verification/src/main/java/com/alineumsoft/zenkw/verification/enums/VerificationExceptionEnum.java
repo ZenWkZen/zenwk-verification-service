@@ -27,8 +27,11 @@ public enum VerificationExceptionEnum {
               "FUNC_SEC_VERIFICATION_0003",
               "functional.verification.token.email.notmatch"), FUNC_VERIFICATION_UUID_NOT_MATCH(
                   "FUNC_SEC_VERIFICATION_0004",
-                  "functional.verification.token.uuid.notmatch"), FUNC_VERIFICATION_UUID_NOT_FOUND(
-                      "FUNC_SEC_VERIFICATION_0005", "functional.verification.token.uuid.notfound");
+                  "functional.verification.token.uuid.notmatch"), FUNC_VERIFICATION_CODE_TOKEN_NOT_MATCH(
+                      "FUNC_SEC_VERIFICATION_0005",
+                      "functional.verification.token.code.notmatch"), FUNC_VERIFICATION_URL_PATH_NOT_NULL(
+                          "FUNC_SEC_VERIFICATION_0006",
+                          "functional.verification.token.urlpath.notnull");
 
   /**
    * code

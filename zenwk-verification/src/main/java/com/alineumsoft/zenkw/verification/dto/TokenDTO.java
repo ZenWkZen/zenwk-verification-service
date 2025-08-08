@@ -1,12 +1,16 @@
 package com.alineumsoft.zenkw.verification.dto;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import com.alineumsoft.zenkw.verification.common.constants.RegexConstants;
 import com.alineumsoft.zenkw.verification.constants.DtoValidationKeys;
-import com.alineumsoft.zenkw.verification.entity.Token;
+import com.alineumsoft.zenkw.verification.validation.ValidUrlOrEmpty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -21,6 +25,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class TokenDTO implements Serializable {
   private static final long serialVersionUID = 1L;
   /**
@@ -31,6 +36,12 @@ public class TokenDTO implements Serializable {
   @Size(max = 254, message = DtoValidationKeys.USER_EMAIL_MAX_LENGTH)
   private String email;
   /**
+   * Url enviada desde el front.
+   */
+  @ValidUrlOrEmpty(message = DtoValidationKeys.URL_OR_EMPTY_REGEX)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private String pathUrl;
+  /**
    * Codigo del token.
    */
   private String code;
@@ -38,22 +49,20 @@ public class TokenDTO implements Serializable {
    * UUID asociado al objecto.
    */
   private String uuid;
-
   /**
-   * 
-   * <p>
-   * <b> Constructor </b> Recibe una entidad Token y regresa su DTO.
-   * </p>
-   * 
-   * @author <a href="mailto:alineumsoft@gmail.com">C. Alegria</a>
-   * @param token
+   * Hash del token
    */
-  public TokenDTO(Token token) {
-    email = token.getEmail();
-    code = token.getCode();
-    uuid = token.getUuid();
-
-  }
-
+  @JsonIgnore
+  private String hashCode;
+  /**
+   * Hash de UUID
+   */
+  @JsonIgnore
+  private String hashUuid;
+  /**
+   * Fecha expiración token
+   */
+  @JsonIgnore
+  private LocalDateTime expirationDate;
 
 }

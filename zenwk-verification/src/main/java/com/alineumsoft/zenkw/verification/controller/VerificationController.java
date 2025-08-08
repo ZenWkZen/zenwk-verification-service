@@ -72,4 +72,23 @@ public class VerificationController {
       @Validated @RequestBody TokenDTO dto) {
     return ResponseEntity.ok(verificationService.verifyToken(dto, request));
   }
+
+  /**
+   * 
+   * <p>
+   * <b> CU004_Restablecer contraseña </b> Envía la notificación al correo del usuario con link de
+   * acceso para el cambio de contraseña.
+   * </p>
+   * 
+   * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
+   * @param request
+   * @param email
+   * @return
+   */
+  @PostMapping("/reset-password")
+  public ResponseEntity<Boolean> sendResetPassword(HttpServletRequest request,
+      @Validated @RequestBody TokenDTO dto) {
+    return ResponseEntity.ok(verificationService.resetPassword(request, dto));
+
+  }
 }

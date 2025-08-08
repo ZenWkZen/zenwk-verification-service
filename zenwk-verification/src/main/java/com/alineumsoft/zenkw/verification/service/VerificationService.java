@@ -6,19 +6,21 @@ import java.util.Map;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 import com.alineumsoft.zenkw.verification.common.exception.FunctionalException;
 import com.alineumsoft.zenkw.verification.common.helper.ApiRestSecurityHelper;
 import com.alineumsoft.zenkw.verification.constants.Constants;
 import com.alineumsoft.zenkw.verification.dto.EmailRequestDTO;
 import com.alineumsoft.zenkw.verification.dto.TokenDTO;
 import com.alineumsoft.zenkw.verification.entity.LogSecurity;
+import com.alineumsoft.zenkw.verification.entity.Person;
 import com.alineumsoft.zenkw.verification.entity.Token;
+import com.alineumsoft.zenkw.verification.entity.User;
 import com.alineumsoft.zenkw.verification.enums.MessagesVerificationEnum;
 import com.alineumsoft.zenkw.verification.enums.SecurityActionEnum;
 import com.alineumsoft.zenkw.verification.enums.VerificationExceptionEnum;
 import com.alineumsoft.zenkw.verification.repository.LogSecurityRepository;
 import com.alineumsoft.zenkw.verification.repository.TokenRepository;
+import com.alineumsoft.zenkw.verification.repository.UserRepository;
 import com.alineumsoft.zenkw.verification.util.CodeGenerator;
 import com.alineumsoft.zenkw.verification.util.CryptoUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -51,6 +53,11 @@ public class VerificationService extends ApiRestSecurityHelper {
   private final AmqpTemplate rabbitTemplate;
 
   /**
+   * Repositorio para la gestion de la entidad el usuario.
+   */
+  private final UserRepository userRepository;
+
+  /**
    * <p>
    * <b> CU003_Gestionar token de verificación. </b> Envía un token de verificación a la cuenta de
    * correo del usuario.
@@ -62,39 +69,55 @@ public class VerificationService extends ApiRestSecurityHelper {
    * @param userDetails
    * @return
    */
-  public TokenDTO sendToken(@Validated TokenDTO dto, HttpServletRequest request) {
+  public TokenDTO sendToken(TokenDTO dto, HttpServletRequest request) {
     String username = dto.getEmail();
     LogSecurity logSecurity = initializeLog(request, username, getJson(dto), notBody,
         SecurityActionEnum.VERIFICATION_SEND_TOKEN.getCode());
-    String email = dto.getEmail();
+
     try {
-      String code = CodeGenerator.generateCode(Constants.TOKEN_CODE_ZISE);
-      String uuid = CodeGenerator.generateUUID();
-      Token token = tokenRepository.findByEmail(email).orElse(null);
-
-      if (token == null) {
-        token = new Token(CryptoUtil.encryptCode(code), dto.getEmail(), username,
-            CryptoUtil.encryptCode(uuid));
-      } else {
-        token.setCode(CryptoUtil.encryptCode(code));
-        token.setUuid(CryptoUtil.encryptCode(uuid));
+      Token token = tokenRepository.findByEmail(dto.getEmail()).orElse(null);
+      if (token != null) {
+        tokenRepository.delete(token);
       }
-
-      token.setExpirationDate(LocalDateTime.now().plusMinutes(Constants.TOKEN_CODE_MINUTES));
+      TokenDTO tokenDTO = generateTokenDTO(dto.getEmail());
       // Se guarda el token o se actualiza. Un usuario siempre tendra un token asociado
       // Si aumenta el alcance, gestionar mas de un token activos al mismo tiempo.
-      TokenDTO tokenDto = new TokenDTO(tokenRepository.save(token));
+      tokenRepository.save(new Token(tokenDTO, username));
 
-      EmailRequestDTO emailDTO = generateEmailToToken(email, code, username);
+      EmailRequestDTO emailDTO =
+          generateTemplateRegisterFlow(tokenDTO.getEmail(), tokenDTO.getCode(), username);
+
       rabbitTemplate.convertAndSend(Constants.RABBITH_EMAIL_QUEUE, emailDTO);
       saveSuccessLog(HttpStatus.OK.value(), logSecurity, logSecurityUserRespository);
-      return tokenDto;
+      return tokenDTO;
     } catch (RuntimeException e) {
       setLogSecurityError(e, logSecurity);
       throw new FunctionalException(e.getMessage(), e.getCause(), logSecurityUserRespository,
           logSecurity);
     }
 
+  }
+
+  /**
+   * <p>
+   * <b> CU003_Gestionar token de verificación </b> Genera el dto con los datos del token
+   * </p>
+   * 
+   * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
+   * @param email
+   * @return
+   */
+  private TokenDTO generateTokenDTO(String email) {
+    TokenDTO dto = new TokenDTO();
+    dto.setEmail(email);
+    dto.setCode(CodeGenerator.generateCode(Constants.TOKEN_CODE_ZISE));
+    dto.setHashCode(CryptoUtil.encryptCode(dto.getCode()));
+    dto.setUuid(CodeGenerator.generateUUID());
+    dto.setHashUuid(CryptoUtil.encryptCode(dto.getUuid()));
+    dto.setExpirationDate(LocalDateTime.now().plusMinutes(Constants.TOKEN_CODE_MINUTES));
+
+
+    return dto;
   }
 
   /**
@@ -109,24 +132,43 @@ public class VerificationService extends ApiRestSecurityHelper {
    * @param username
    * @return
    */
-  private EmailRequestDTO generateEmailToToken(String email, String code, String username) {
+  private EmailRequestDTO generateTemplateRegisterFlow(String email, String code, String username) {
     EmailRequestDTO dto = new EmailRequestDTO();
     Map<String, Object> metadata = new HashMap<>();
     // Metadatos para la plantilla.
-    metadata.put(Constants.TOKEN_TEMPLATE_EMAIL_NAME_CODE, code);
-    metadata.put(Constants.TOKEN_TEMPLATE_EMAIL_NAME_USERNAME, username != null ? username : email);
-    metadata.put(Constants.TOKEN_EMPLATE_EMAIL_NAME_CORPORATION, Constants.ZENWK);
+    metadata.put(Constants.REGISTER_TEMPLATE_EMAIL_NAME_CODE, code);
+    metadata.put(Constants.TEMPLATE_EMAIL_NAME_USERNAME, username != null ? username : email);
+    metadata.put(Constants.TEMPLATE_EMAIL_NAME_CORPORATION, Constants.ZENWK);
+    // Plantilla html
+    dto.setTemplateName(Constants.RABBIT_REGISTER_USER_TEMPLATE);
+    dto.setSubject(MessagesVerificationEnum.TEMPLATE_REGISTER_FLOW_EMAIL_SUBJECT.getMessage(code));
     // Dto para enviar a cola de rabbithMq.
-    dto.setTo(email);
-    dto.setSubject(MessagesVerificationEnum.TOKEN_EMAIL_SUBJECT.getMessage(code));
-    dto.setVariables(metadata);
-    dto.setTemplateName(Constants.TOKEN_EMAIL_TEMPLATE);
+    prepareEmailSubject(email, dto, metadata);
     return dto;
   }
 
   /**
+   * 
    * <p>
-   * <b> CU003_Gestionar token de verificación. </b> lida un código de verificación generado
+   * <b> CU001_CU003_Gestionar token de verificación </b> Setea los datos de la planilla que se
+   * notificará por correo.
+   * </p>
+   * 
+   * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
+   * @param email
+   * @param dto
+   * @param metadata
+   */
+  private void prepareEmailSubject(String email, EmailRequestDTO dto,
+      Map<String, Object> metadata) {
+    dto.setTo(email);
+    dto.setVariables(metadata);
+
+  }
+
+  /**
+   * <p>
+   * <b> CU003_Gestionar token de verificación. </b> valida un código de verificación generado
    * previamente.
    * </p>
    * 
@@ -140,14 +182,12 @@ public class VerificationService extends ApiRestSecurityHelper {
     LogSecurity logSecurity = initializeLog(request, username, getJson(dto),
         Boolean.class.getName(), SecurityActionEnum.VERIFICATION_VALIDATE_TOKEN.getCode());
     try {
-      Token token = getToken(dto);
+      Token token = getToken(dto.getEmail());
       String messageError = validateToken(dto, token);
-      // Validacion del token
+
       if (!messageError.isEmpty()) {
         throw new IllegalArgumentException(messageError);
       }
-      // Si todo es exitoso se elimina el token
-      // tokenRepository.delete(token);
       saveSuccessLog(HttpStatus.OK.value(), logSecurity, logSecurityUserRespository);
       return true;
     } catch (RuntimeException e) {
@@ -174,40 +214,133 @@ public class VerificationService extends ApiRestSecurityHelper {
     String messageError = "";
     if (!token.getEmail().equals(dto.getEmail())) {
       messageError = VerificationExceptionEnum.FUNC_VERIFICATION_EMAIL_NOT_MATCH.getCodeMessage();
+    } else if (!CryptoUtil.matchesCode(dto.getUuid(), token.getUuid())) {
+      messageError = VerificationExceptionEnum.FUNC_VERIFICATION_UUID_NOT_MATCH.getCodeMessage();
     } else if (token.getExpirationDate().isBefore(LocalDateTime.now())) {
       messageError = VerificationExceptionEnum.FUNC_VERIFICATION_TOKEN_EXPIRATION.getCodeMessage();
-    } else if (!token.getUuid().equals(dto.getUuid())) {
-      messageError = VerificationExceptionEnum.FUNC_VERIFICATION_UUID_NOT_MATCH.getCodeMessage();
+    } else if (dto.getCode() != null && !dto.getCode().isEmpty()
+        && !CryptoUtil.matchesCode(dto.getCode(), token.getCode())) {
+      messageError =
+          VerificationExceptionEnum.FUNC_VERIFICATION_CODE_TOKEN_NOT_MATCH.getCodeMessage();
     }
     return messageError;
   }
 
   /**
    * <p>
-   * <b> U003_Gestionar token de verificación. </b> Recupera el token con todos sus datos
+   * <b>CU003_Gestionar token de verificación. </b> Recupera el token con todos sus datos
    * </p>
    * 
    * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
+   * @param email
+   * @return
+   */
+  private Token getToken(String email) {
+    return tokenRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException(
+        VerificationExceptionEnum.FUNC_VERIFICATION_TOKEN_NOT_FOUND.getCodeMessage()));
+
+  }
+
+  /**
+   * 
+   * <p>
+   * <b> CU004_Restablecer contraseña </b> Envía la notificación al correo del usuario con link de
+   * acceso para el cambio de contraseña.
+   * </p>
+   * 
+   * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
+   * @param request
    * @param dto
    * @return
    */
-  private Token getToken(TokenDTO dto) {
-    if (dto.getCode() != null && !dto.getCode().isEmpty()) {
-      return tokenRepository.findByCode(dto.getCode())
-          .orElseThrow(() -> new EntityNotFoundException(
-              VerificationExceptionEnum.FUNC_VERIFICATION_TOKEN_NOT_FOUND.getCodeMessage()));
-    }
-    if (dto.getUuid() != null && !dto.getUuid().isEmpty()) {
-      return tokenRepository.findByUuid(dto.getUuid())
-          .orElseThrow(() -> new EntityNotFoundException(
-              VerificationExceptionEnum.FUNC_VERIFICATION_UUID_NOT_FOUND.getCodeMessage()));
+  public boolean resetPassword(HttpServletRequest request, TokenDTO dto) {
+    String username = getNameUserFromEmail(dto.getEmail());
+    LogSecurity logSecurity = initializeLog(request, username, notBody, Boolean.class.getName(),
+        SecurityActionEnum.VERIFICATION_SEND_TOKEN.getCode());
+    String urlParam = null;
+    String url = null;
+    try {
+      if (dto.getPathUrl() == null || dto.getPathUrl().isEmpty()) {
+        throw new IllegalArgumentException(
+            VerificationExceptionEnum.FUNC_VERIFICATION_URL_PATH_NOT_NULL.getCodeMessage());
+      }
+      Token token = tokenRepository.findByEmail(dto.getEmail())
+          .orElseThrow(() -> new EntityNotFoundException());
 
-    } else {
-      return tokenRepository.findByEmail(dto.getEmail())
-          .orElseThrow(() -> new EntityNotFoundException(
-              VerificationExceptionEnum.FUNC_VERIFICATION_TOKEN_NOT_FOUND.getCodeMessage()));
-    }
+      // Gestión del token
+      TokenDTO tokenDTO = generateTokenDTO(dto.getEmail());
+      tokenRepository.delete(token);
+      tokenRepository.save(new Token(tokenDTO, username));
 
+      urlParam = "?email=".concat(tokenDTO.getEmail()).concat("&uuid=").concat(tokenDTO.getUuid())
+          .concat("&code=").concat(tokenDTO.getCode());
+      url = dto.getPathUrl().concat(urlParam);
+
+      EmailRequestDTO emailDTO =
+          generateTemplateToResetPassword(tokenDTO.getEmail(), url, username);
+
+      rabbitTemplate.convertAndSend(Constants.RABBITH_EMAIL_QUEUE, emailDTO);
+      saveSuccessLog(HttpStatus.OK.value(), logSecurity, logSecurityUserRespository);
+      return true;
+    } catch (RuntimeException e) {
+      setLogSecurityError(e, logSecurity);
+      throw new FunctionalException(e.getMessage(), e.getCause(), logSecurityUserRespository,
+          logSecurity);
+
+    }
+  }
+
+  /**
+   * <p>
+   * <b> CU004_Restablecer contraseña </b> Recupera el username desde el email.
+   * </p>
+   * 
+   * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
+   * @param email
+   * @return
+   */
+  public String getNameUserFromEmail(String email) {
+    try {
+      User user =
+          userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException());
+      Person person = user.getPerson();
+
+      if (person != null && person.getFirstName() != null && person.getLastName() != null) {
+        return person.getFirstName().concat(" ").concat(person.getLastName());
+
+      }
+
+      return user.getUsername();
+    } catch (RuntimeException e) {
+      return email;
+    }
+  }
+
+  /**
+   * <p>
+   * <b> CU004_Restablecer contraseña </b> Genera lo datos para el email con el enlace para
+   * restablecer la contraseña
+   * </p>
+   * 
+   * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
+   * @param email
+   * @param code
+   * @param username
+   * @return
+   */
+  private EmailRequestDTO generateTemplateToResetPassword(String email, String url,
+      String username) {
+    EmailRequestDTO dto = new EmailRequestDTO();
+    Map<String, Object> metadata = new HashMap<>();
+    // Metadatos para la plantilla.
+    metadata.put(Constants.TEMPLATE_EMAIL_NAME_USERNAME, username != null ? username : email);
+    metadata.put(Constants.TEMPLATE_EMAIL_NAME_CORPORATION, Constants.ZENWK);
+    metadata.put(Constants.RESET_PASSWORD_TEMPLATE_EMAIL_RESET_URL, url);
+    // Plantilla html
+    dto.setTemplateName(Constants.RABBIT_RESET_PASSWORD_TEMPLATE);
+    dto.setSubject(MessagesVerificationEnum.TEMPLATE_RESET_PASSWORD_EMAIL_SUBJECT.getMessage());
+    prepareEmailSubject(email, dto, metadata);
+    return dto;
   }
 
 }

@@ -19,22 +19,22 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EmailRequestDTO implements Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * Para
-	 */
-	private String to;
-	/**
-	 * Asunto del correo
-	 */
-	private String subject;
-	/**
-	 * Cuerpo del correo
-	 */
-	private Map<String, Object> variables;
-	/**
-	 * Nombre de la plantilla del correo
-	 */
-	private String templateName;
+  private static final long serialVersionUID = 1L;
+  /**
+   * Para
+   */
+  private String to;
+  /**
+   * Asunto del correo
+   */
+  private String subject;
+  /**
+   * Cuerpo del correo
+   */
+  private transient Map<String, Object> variables;
+  /**
+   * Nombre de la plantilla del correo
+   */
+  private String templateName;
 
 }

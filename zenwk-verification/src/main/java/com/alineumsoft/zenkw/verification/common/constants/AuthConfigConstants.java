@@ -1,5 +1,8 @@
 package com.alineumsoft.zenkw.verification.common.constants;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * <p>
  * Constantes utilizadas en la autenticacion y autorizacion
@@ -9,7 +12,9 @@ package com.alineumsoft.zenkw.verification.common.constants;
  * @project commons-api
  * @class AuthConfig
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AuthConfigConstants {
+
   /**
    * class: JwtProvider
    */
@@ -25,9 +30,9 @@ public final class AuthConfigConstants {
   /**
    * class: PermissionService
    */
-  public final static String ID = "{id}";
-  public final static String URL_USER = "user";
-  public final static String URL_PERSON = "person";
+  public static final String ID = "{id}";
+  public static final String URL_USER = "user";
+  public static final String URL_PERSON = "person";
   /**
    * class: JwtAuthenticationFilter
    */
@@ -36,6 +41,6 @@ public final class AuthConfigConstants {
   /**
    * class: CsrfController
    */
-  public static String XCSRF_TOKEN = "XCSRF-TOKEN";
+  public static final String XCSRF_TOKEN = "XCSRF-TOKEN";
 
 }

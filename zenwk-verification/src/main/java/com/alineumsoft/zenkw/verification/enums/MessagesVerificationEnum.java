@@ -1,5 +1,6 @@
 package com.alineumsoft.zenkw.verification.enums;
 
+import org.hibernate.procedure.NoSuchParameterException;
 import com.alineumsoft.zenkw.verification.common.exception.enums.CoreExceptionEnum;
 import com.alineumsoft.zenkw.verification.common.message.component.MessageSourceAccessorComponent;
 import lombok.Getter;
@@ -34,7 +35,7 @@ public enum MessagesVerificationEnum {
     try {
       return MessageSourceAccessorComponent.getMessage(messageKey);
     } catch (Exception e) {
-      throw new RuntimeException(
+      throw new NoSuchParameterException(
           CoreExceptionEnum.TECH_COMMON_MESSAGE_NOT_FOUND.getCodeMessage(messageKey));
     }
 
@@ -48,7 +49,7 @@ public enum MessagesVerificationEnum {
     try {
       return MessageSourceAccessorComponent.getMessage(messageKey, params);
     } catch (Exception e) {
-      throw new RuntimeException(
+      throw new NoSuchParameterException(
           CoreExceptionEnum.TECH_COMMON_MESSAGE_NOT_FOUND.getCodeMessage(messageKey));
     }
   }

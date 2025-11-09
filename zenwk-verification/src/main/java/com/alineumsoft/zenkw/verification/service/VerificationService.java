@@ -91,8 +91,7 @@ public class VerificationService extends ApiRestSecurityHelper {
       return tokenDTO;
     } catch (RuntimeException e) {
       setLogSecurityError(e, logSecurity);
-      throw new FunctionalException(e.getMessage(), e.getCause(), logSecurityUserRepo,
-          logSecurity);
+      throw new FunctionalException(e.getMessage(), e.getCause(), logSecurityUserRepo, logSecurity);
     }
 
   }
@@ -189,8 +188,7 @@ public class VerificationService extends ApiRestSecurityHelper {
       return true;
     } catch (RuntimeException e) {
       setLogSecurityError(e, logSecurity);
-      throw new FunctionalException(e.getMessage(), e.getCause(), logSecurityUserRepo,
-          logSecurity);
+      throw new FunctionalException(e.getMessage(), e.getCause(), logSecurityUserRepo, logSecurity);
     }
 
   }
@@ -261,8 +259,8 @@ public class VerificationService extends ApiRestSecurityHelper {
         throw new IllegalArgumentException(
             VerificationExceptionEnum.FUNC_VERIFICATION_URL_PATH_NOT_NULL.getCodeMessage());
       }
-      Token token = tokenRepository.findByEmail(dto.getEmail())
-          .orElseThrow(() -> new EntityNotFoundException());
+      Token token =
+          tokenRepository.findByEmail(dto.getEmail()).orElseThrow(EntityNotFoundException::new);
 
       // Gestión del token
       TokenDTO tokenDTO = generateTokenDTO(dto.getEmail());
@@ -281,8 +279,7 @@ public class VerificationService extends ApiRestSecurityHelper {
       return true;
     } catch (RuntimeException e) {
       setLogSecurityError(e, logSecurity);
-      throw new FunctionalException(e.getMessage(), e.getCause(), logSecurityUserRepo,
-          logSecurity);
+      throw new FunctionalException(e.getMessage(), e.getCause(), logSecurityUserRepo, logSecurity);
 
     }
   }

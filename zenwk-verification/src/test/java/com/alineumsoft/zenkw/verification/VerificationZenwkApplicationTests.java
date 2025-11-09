@@ -9,6 +9,8 @@ import org.springframework.test.context.ActiveProfiles;
 class VerificationZenwkApplicationTests {
 
   @Test
-  void contextLoads() {}
+  void contextLoads() {
+    // ...
+  }
 
 }

@@ -1,5 +1,7 @@
 package com.alineumsoft.zenkw.verification.common.exception;
 
+import java.util.concurrent.CompletableFuture;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -9,56 +11,72 @@ import lombok.extern.slf4j.Slf4j;
 
 /*
  * @author <a href="mailto:alineumsoft@gmail.com">C. Alegria</a>
+ * 
  * @project SecurityUser
+ * 
  * @class BaseException
  */
 @Slf4j
 @Service
 public abstract class CoreException extends RuntimeException {
-	static final long serialVersionUID = 1L;
-	// Metodo comun por convencion en cualquier tabla de logs
-	private static final String METHOD_MESSAGE_ERROR = "setErrorMessage";
+  static final long serialVersionUID = 1L;
+  // Metodo comun por convencion en cualquier tabla de logs
+  private static final String METHOD_MESSAGE_ERROR = "setErrorMessage";
 
-	/**
-	 * <p>
-	 * <b> General </b> CoreException
-	 * </p>
-	 *
-	 * @author <a href="mailto:alineumsoft@gmail.com">C. Alegria</a>
-	 * @param <T>
-	 * @param message
-	 * @param code
-	 * @param cause
-	 * @param repository
-	 * @param entity
-	 */
-	public <T> CoreException(String message, Throwable cause, JpaRepository<T, ?> repository, T entity) {
-		super(message, cause);
-		saveLog(repository, entity, message);
-	}
+  /**
+   * <p>
+   * <b> General </b> CoreException
+   * </p>
+   *
+   * @author <a href="mailto:alineumsoft@gmail.com">C. Alegria</a>
+   * @param <T>
+   * @param message
+   * @param code
+   * @param cause
+   * @param repository
+   * @param entity
+   * @throws NoSuchMethodException
+   */
+  protected <T> CoreException(String message, Throwable cause, JpaRepository<T, ?> repository,
+      T entity) {
+    super(message, cause);
+    try {
+      CoreException self = (CoreException) AopContext.currentProxy();
+      self.saveLog(repository, entity, message);
+    } catch (IllegalStateException ex) {
+      // Fallback sin llamada directa al método asíncrono
+      CompletableFuture.runAsync(() -> {
+        try {
+          saveLog(repository, entity, message);
+        } catch (Exception e) {
+          log.error("Error en fallback async: {}", e.getMessage());
+        }
+      });
+    }
+  }
 
-	/**
-	 * <p>
-	 * <b> General </b> Periste la excepcion
-	 * </p>
-	 *
-	 * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
-	 * @param <T>
-	 * @param repository
-	 * @param entity
-	 */
-	@Async
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	private <T> void saveLog(JpaRepository<T, ?> repository, T entity, String message) {
-		if (repository != null && entity != null) {
-			try {
-				entity.getClass().getMethod(METHOD_MESSAGE_ERROR, String.class).invoke(entity, message);
-			} catch (Exception e) {
-				log.error(e.getMessage());
-				throw new RuntimeException(e);
-			}
-			repository.save(entity);
-		}
-	}
+  /**
+   * <p>
+   * <b> General </b> Periste la excepcion
+   * </p>
+   *
+   * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
+   * @param <T>
+   * @param repository
+   * @param entity
+   * @throws NoSuchMethodException
+   */
+  @Async
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  protected <T> void saveLog(JpaRepository<T, ?> repository, T entity, String message) {
+    if (repository != null && entity != null) {
+      try {
+        entity.getClass().getMethod(METHOD_MESSAGE_ERROR, String.class).invoke(entity, message);
+      } catch (Exception e) {
+        log.error(e.getMessage());
+      }
+      repository.save(entity);
+    }
+  }
 
 }

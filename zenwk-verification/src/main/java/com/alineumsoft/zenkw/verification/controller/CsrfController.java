@@ -59,10 +59,10 @@ public class CsrfController {
   @PostMapping("/token")
   public ResponseEntity<Void> getCsrfToken(@Validated @RequestBody TokenDTO inDto,
       HttpServletRequest request, HttpServletResponse response) {
-    TokenDTO OutDto = csrfTokenService.generateCsrfToken(inDto, request);
+    TokenDTO outDto = csrfTokenService.generateCsrfToken(inDto, request);
 
     ResponseCookie csrfCookie =
-        ResponseCookie.from(AuthConfigConstants.XCSRF_TOKEN, OutDto.getCode()).httpOnly(true)
+        ResponseCookie.from(AuthConfigConstants.XCSRF_TOKEN, outDto.getCode()).httpOnly(true)
             .secure(true).path("/").maxAge(Duration.ofHours(2)).build();
 
     response.addHeader(HttpHeaders.SET_COOKIE, csrfCookie.toString());

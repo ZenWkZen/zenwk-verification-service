@@ -1,5 +1,8 @@
 package com.alineumsoft.zenkw.verification.constants;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * <p>
  * Constes usadas en el módulo de verificación del sistema.
@@ -9,6 +12,7 @@ package com.alineumsoft.zenkw.verification.constants;
  * @project verification-zenwk
  * @class Constants
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Constants {
   public static final String ZENWK = "ZenWk";
   public static final String RABBITH_EMAIL_QUEUE = "emailQueue";

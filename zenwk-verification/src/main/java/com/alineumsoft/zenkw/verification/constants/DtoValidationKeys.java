@@ -1,5 +1,8 @@
 package com.alineumsoft.zenkw.verification.constants;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * <p>
  * Contiene las claves de los mensajes de validación utilizados en los DTOs para anotaciones de
@@ -12,6 +15,7 @@ package com.alineumsoft.zenkw.verification.constants;
  * @project verification-zenwk
  * @class DtoValidationKeys
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DtoValidationKeys {
   public static final String USER_EMAIL_MAX_LENGTH = "validation.user.email.maxlength";
   public static final String USER_EMAIL_INVALID = "validation.user.email.invalid";

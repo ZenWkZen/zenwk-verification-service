@@ -26,8 +26,7 @@ public class UserUtilService {
    */
   public String getNameUserFromEmail(String email) {
     try {
-      User user =
-          userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException());
+      User user = userRepository.findByEmail(email).orElseThrow(EntityNotFoundException::new);
       Person person = user.getPerson();
 
       if (person != null && person.getFirstName() != null && person.getLastName() != null) {

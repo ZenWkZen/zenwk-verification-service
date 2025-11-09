@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "sec_user")
 @Data
 @NoArgsConstructor
-public class User implements Cloneable {
+public class User {
   /**
    * id
    */
@@ -80,18 +80,35 @@ public class User implements Cloneable {
   @JoinColumn(name = "secuseidperson")
   private Person person;
 
+
   /**
-   * @author <a href="alineumsoft@gmail.com">C. Alegria</a>
-   * @return
-   * @see java.lang.Object#clone()
+   * Constructor de copia.
+   *
+   * @param other instancia de User a copiar
    */
-  @Override
-  public User clone() {
-    try {
-      return (User) super.clone();
-    } catch (CloneNotSupportedException e) {
-      throw new RuntimeException(e);
-    }
+  public User(User other) {
+    this.id = other.id;
+    this.username = other.username;
+    this.password = other.password;
+    this.email = other.email;
+    this.creationDate = other.creationDate;
+    this.modificationDate = other.modificationDate;
+    this.userCreation = other.userCreation;
+    this.userModification = other.userModification;
+    this.state = other.state;
+    // Copia superficial del objeto Person; se recomienda implementar una copia profunda si es
+    // mutable
+    this.person = other.person;
+  }
+
+  /**
+   * Método de fábrica para crear una copia del usuario.
+   *
+   * @param other instancia de User a copiar
+   * @return nueva instancia de User con los mismos valores
+   */
+  public static User copyOf(User other) {
+    return new User(other);
   }
 
 }

@@ -1,17 +1,62 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>C&oacute;digo de Verificaci&oacute;n</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title th:text="'Código de Verificación - ' + ${FIELD_NAME_CORPORATION}">
+        Código de Verificación
+    </title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #007bff;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+    </style>
 </head>
 <body>
-    <h2>&iexcl;Hola, <span th:text="${FILED_USERNAME}">Usuario</span>!</h2>
-    <p>Gracias por registrarte en <strong th:text="${FIELD_NAME_CORPORATION}"></strong>.</p>
-    <p>Tu c&oacute;digo de verificaci&oacute;n es:</p>
-    <h1 style="color: #007bff;" th:text="${FIELD_CODE_TOKEN}"></h1>
-    <p>Por favor, ingresa este c&oacute;digo en la p&aacute;gina de registro para continuar con el proceso.</p>
-    <p>Si no solicitaste este c&oacute;digo, ignora este mensaje.</p>
-    <p>Atentamente,</p>
-    <p><strong th:text="${FIELD_NAME_CORPORATION}"></strong></p>
+    <div class="container">
+        <h2>
+            ¡Hola, <span th:text="${FIELD_USERNAME}">Usuario</span>!
+        </h2>
+
+        <p>
+            Gracias por registrarte en 
+            <strong th:text="${FIELD_NAME_CORPORATION}">Corporación</strong>.
+        </p>
+
+        <p>Tu código de verificación es:</p>
+        <h1 th:text="${FIELD_CODE_TOKEN}">000000</h1>
+
+        <p>
+            Por favor, ingresa este código en la página de registro para continuar con el proceso.
+        </p>
+
+        <p>Si no solicitaste este código, puedes ignorar este mensaje.</p>
+
+        <div class="footer">
+            <p>Atentamente,</p>
+            <p><strong th:text="${FIELD_NAME_CORPORATION}">Corporación</strong></p>
+        </div>
+    </div>
 </body>
 </html>

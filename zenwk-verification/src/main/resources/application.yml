@@ -12,6 +12,8 @@ cors:
   allowed-origins: ${CORS_AUTH_ALLOWED_ORIGINS:http://localhost:3000,https://localhost:3001}
 
 spring:
+  datasource:
+    embedded-database-connection: none
   application:
     name: verification-zenwk
   config:

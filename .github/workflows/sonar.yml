@@ -1,7 +1,7 @@
-name: SonarCloud Verification Service
+name: SonarCloud
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # permite ejecución manual
   push:
     branches: [main]
   pull_request:
@@ -12,6 +12,6 @@ jobs:
     uses: zenwk-org/zenwk-workflows/.github/workflows/sonarcloud.yml@main
     with:
       projectKey: ZenWkZen_zenwk-verification
-      organization: zenwk-org
-      microserviceDir: zenwk-verification  # Ruta relativa al repo raíz
+      organization: zenwk
+      microserviceDir: ./zenwk-verification
     secrets: inherit

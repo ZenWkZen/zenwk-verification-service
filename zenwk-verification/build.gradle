@@ -59,13 +59,6 @@ dependencyManagement {
     }
 }
 
-sonar {
-  properties {
-    property "sonar.projectKey", "ZenWkZen_zenwk-verification-service"
-    property "sonar.organization", "zenwk"
-  }
-}
-
 
 tasks.named('test') {
 	useJUnitPlatform()

@@ -1,0 +1,14 @@
+name: SonarCloud
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonar:
+    uses: ZenWkZen/infra-zenwk/.github/workflows/sonarcloud.yml@main
+    with:
+      working-directory: ./zenwk-verification
+    secrets: inherit

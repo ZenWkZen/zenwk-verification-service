@@ -92,11 +92,9 @@ test {
     // outputs.upToDateWhen { false }
 }
 
-
-//apply from: "${rootDir}/../../infra-zenwk/common/gradle/jacoco.gradle"
+// Configuración local/git-actions
 def commonJacoco = file("${rootDir}/../../zenwk-workflows/common/gradle/jacoco.gradle")
 if (!commonJacoco.exists()) {
-    // fallback: cuando el archivo fue copiado por el pipeline a la carpeta gradle/
     commonJacoco = file("${rootDir}/gradle/jacoco.gradle")
 }
 apply from: commonJacoco

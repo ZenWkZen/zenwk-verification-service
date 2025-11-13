@@ -80,10 +80,10 @@ test {
     // outputs.upToDateWhen { false }
 }
 
+
 def commonJacoco = file("${rootDir}/../../zenwk-workflows/common/gradle/jacoco.gradle")
-
-if (commonJacoco.exists()) {
-    apply from: commonJacoco
+if (!commonJacoco.exists()) {
+    commonJacoco = file("${rootDir}/gradle/jacoco.gradle")
 }
-
+apply from: commonJacoco
 

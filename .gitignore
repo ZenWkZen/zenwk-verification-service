@@ -25,6 +25,7 @@ replay_pid*
 /target/
 /out/
 /bin/
+**/build/
 /classes/
 
 # Gradle
